@@ -10,6 +10,7 @@ import {
   fetchReport,
   updateProduct,
   updateStock,
+  invalidateProductsCache,
   isGasConfigured,
 } from '@/services/api'
 import type { Product, DailyReport, ApiStatus } from '@/types'
@@ -80,7 +81,10 @@ export default function AdminPage() {
   async function handleSaveProduct(product: Product) {
     setSaving(true)
     try {
-      if (gasOk) await updateProduct(product)
+      if (gasOk) {
+        await updateProduct(product)
+        invalidateProductsCache()
+      }
       setProducts(prev => {
         const idx = prev.findIndex(p => p.id === product.id)
         if (idx >= 0) {
@@ -98,7 +102,10 @@ export default function AdminPage() {
   async function handleAdjustStock(id: string, delta: number) {
     setSaving(true)
     try {
-      if (gasOk) await updateStock(id, delta)
+      if (gasOk) {
+        await updateStock(id, delta)
+        invalidateProductsCache()
+      }
       setProducts(prev => prev.map(p =>
         p.id === id ? { ...p, stock: Math.max(0, p.stock + delta) } : p
       ))

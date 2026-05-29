@@ -37,8 +37,20 @@ export function isGasConfigured(): boolean {
   return Boolean(GAS_URL)
 }
 
+let productsCache: { data: Product[]; ts: number } | null = null
+const CACHE_TTL = 60_000
+
 export async function fetchProducts(): Promise<Product[]> {
-  return gasGet<Product[]>('getProducts')
+  if (productsCache && Date.now() - productsCache.ts < CACHE_TTL) {
+    return productsCache.data
+  }
+  const data = await gasGet<Product[]>('getProducts')
+  productsCache = { data, ts: Date.now() }
+  return data
+}
+
+export function invalidateProductsCache(): void {
+  productsCache = null
 }
 
 export async function fetchReport(date?: string): Promise<DailyReport> {

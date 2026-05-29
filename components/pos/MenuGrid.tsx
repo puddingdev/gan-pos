@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useMemo, memo } from 'react'
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
 import type { Product } from '@/types'
 
@@ -16,7 +16,7 @@ function SkeletonCard() {
   )
 }
 
-function ProductCard({ product, onAdd }: { product: Product; onAdd: () => void }) {
+const ProductCard = memo(function ProductCard({ product, onAdd }: { product: Product; onAdd: () => void }) {
   const outOfStock = product.stock === 0
   const unavailable = !product.available || outOfStock
 
@@ -52,15 +52,14 @@ function ProductCard({ product, onAdd }: { product: Product; onAdd: () => void }
       </div>
     </button>
   )
-}
+})
 
-export function MenuGrid({ products, onAddToCart, loading }: Props) {
-  const categories = ['ทั้งหมด', ...Array.from(new Set(products.map(p => p.category)))]
+export const MenuGrid = memo(function MenuGrid({ products, onAddToCart, loading }: Props) {
+  const categories = useMemo(
+    () => ['ทั้งหมด', ...Array.from(new Set(products.map(p => p.category)))],
+    [products]
+  )
   const [active, setActive] = useState('ทั้งหมด')
-
-  const filtered = active === 'ทั้งหมด'
-    ? products
-    : products.filter(p => p.category === active)
 
   if (loading) {
     return (
@@ -89,25 +88,28 @@ export function MenuGrid({ products, onAddToCart, loading }: Props) {
         </TabsList>
       </div>
 
-      {categories.map(cat => (
-        <TabsContent key={cat} value={cat} className="flex-1 overflow-y-auto p-4 mt-0">
-          {filtered.length === 0 ? (
-            <div className="flex items-center justify-center h-40 text-muted-foreground">
-              ไม่มีสินค้าในหมวดนี้
-            </div>
-          ) : (
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
-              {filtered.map(product => (
-                <ProductCard
-                  key={product.id}
-                  product={product}
-                  onAdd={() => onAddToCart(product)}
-                />
-              ))}
-            </div>
-          )}
-        </TabsContent>
-      ))}
+      {categories.map(cat => {
+        const tabProducts = cat === 'ทั้งหมด' ? products : products.filter(p => p.category === cat)
+        return (
+          <TabsContent key={cat} value={cat} className="flex-1 overflow-y-auto p-4 mt-0">
+            {tabProducts.length === 0 ? (
+              <div className="flex items-center justify-center h-40 text-muted-foreground">
+                ไม่มีสินค้าในหมวดนี้
+              </div>
+            ) : (
+              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+                {tabProducts.map(product => (
+                  <ProductCard
+                    key={product.id}
+                    product={product}
+                    onAdd={() => onAddToCart(product)}
+                  />
+                ))}
+              </div>
+            )}
+          </TabsContent>
+        )
+      })}
     </Tabs>
   )
-}
+})

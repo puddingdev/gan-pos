@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useMemo } from 'react'
 import { MenuGrid } from '@/components/pos/MenuGrid'
 import { CartPanel } from '@/components/pos/CartPanel'
 import { CheckoutModal } from '@/components/pos/CheckoutModal'
@@ -68,7 +68,7 @@ export default function PosPage() {
     }
   }, [gasOk, loadProducts])
 
-  function handleAddToCart(product: Product) {
+  const handleAddToCart = useCallback((product: Product) => {
     setCart(prev => {
       const idx = prev.findIndex(i => i.product.id === product.id)
       if (idx >= 0) {
@@ -86,19 +86,19 @@ export default function PosPage() {
         unitCost: product.costPrice,
       }]
     })
-  }
+  }, [])
 
-  function handleUpdateQty(index: number, delta: number) {
+  const handleUpdateQty = useCallback((index: number, delta: number) => {
     setCart(prev => {
       const next = [...prev]
       next[index] = { ...next[index], quantity: next[index].quantity + delta }
       return next
     })
-  }
+  }, [])
 
-  function handleRemove(index: number) {
+  const handleRemove = useCallback((index: number) => {
     setCart(prev => prev.filter((_, i) => i !== index))
-  }
+  }, [])
 
   async function handleConfirmCheckout(method: PaymentMethod, amountPaid: number) {
     const total = cart.reduce((s, i) => s + i.unitPrice * i.quantity, 0)
@@ -133,8 +133,10 @@ export default function PosPage() {
     setTimeout(() => setSuccessMsg(''), 3000)
   }
 
-  const total = cart.reduce((s, i) => s + i.unitPrice * i.quantity, 0)
-  const itemCount = cart.reduce((s, i) => s + i.quantity, 0)
+  const { total, itemCount } = useMemo(() => ({
+    total: cart.reduce((s, i) => s + i.unitPrice * i.quantity, 0),
+    itemCount: cart.reduce((s, i) => s + i.quantity, 0),
+  }), [cart])
 
   function handleCheckoutFromCart() {
     setCartOpen(false)
