@@ -180,6 +180,20 @@ function updateStockInternal(id, delta) {
   }
 }
 
+function formatDateCell(val) {
+  // Handle Date object (Sheets auto-converts date strings)
+  if (val && typeof val.getTime === 'function') {
+    return Utilities.formatDate(val, Session.getScriptTimeZone(), 'yyyy-MM-dd HH:mm');
+  }
+  // Handle string dates like "Fri May 29 2026 16:17:00 GMT+0700..."
+  var s = String(val);
+  var d = new Date(s);
+  if (!isNaN(d.getTime())) {
+    return Utilities.formatDate(d, Session.getScriptTimeZone(), 'yyyy-MM-dd HH:mm');
+  }
+  return s;
+}
+
 function getOrders() {
   var sheet = getSheet('Orders');
   var rows = sheet.getDataRange().getValues();
@@ -189,7 +203,7 @@ function getOrders() {
     if (!r[0]) continue;
     orders.push({
       id:            String(r[0]),
-      date:          String(r[1]),
+      date:          formatDateCell(r[1]),
       itemsSummary:  String(r[2]),
       total:         Number(r[3]),
       totalCost:     Number(r[4]),
@@ -213,11 +227,12 @@ function getReport(dateStr) {
   for (var i = 1; i < rows.length; i++) {
     var r = rows[i];
     if (!r[0]) continue;
-    var rowDate = String(r[1]).substring(0, 10); // "2026-05-29 14:30" → "2026-05-29"
+    var dateFormatted = formatDateCell(r[1]);
+    var rowDate = dateFormatted.substring(0, 10); // "2026-05-29 14:30" → "2026-05-29"
     if (rowDate === today) {
       var order = {
         id:            String(r[0]),
-        date:          String(r[1]),
+        date:          dateFormatted,
         itemsSummary:  String(r[2]),
         total:         Number(r[3]),
         totalCost:     Number(r[4]),

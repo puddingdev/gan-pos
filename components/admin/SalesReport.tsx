@@ -1,10 +1,13 @@
 'use client'
 
+import { RefreshCw } from 'lucide-react'
 import type { DailyReport } from '@/types'
 
 interface Props {
   report: DailyReport | null
   loading: boolean
+  gasOk: boolean
+  onRefresh: () => void
 }
 
 function SummaryCard({ label, value, sub, color }: {
@@ -26,7 +29,16 @@ function SkeletonCard() {
   return <div className="rounded-2xl h-24 bg-muted animate-pulse" />
 }
 
-export function SalesReport({ report, loading }: Props) {
+export function SalesReport({ report, loading, gasOk, onRefresh }: Props) {
+  if (!gasOk) {
+    return (
+      <div className="flex flex-col items-center justify-center py-20 text-muted-foreground gap-2">
+        <span className="text-4xl">📊</span>
+        <p className="text-sm">ต้องตั้งค่า Google Sheets ก่อนดูรายได้</p>
+      </div>
+    )
+  }
+
   if (loading) {
     return (
       <div className="space-y-4">
@@ -44,9 +56,15 @@ export function SalesReport({ report, loading }: Props) {
 
   if (!report || report.orderCount === 0) {
     return (
-      <div className="flex flex-col items-center justify-center py-20 text-muted-foreground gap-2">
+      <div className="flex flex-col items-center justify-center py-20 text-muted-foreground gap-3">
         <span className="text-4xl">📊</span>
         <p className="text-sm">ยังไม่มีออร์เดอร์วันนี้</p>
+        <button
+          onClick={onRefresh}
+          className="flex items-center gap-1.5 text-xs text-primary hover:text-primary/80 font-medium"
+        >
+          <RefreshCw size={13} /> รีเฟรช
+        </button>
       </div>
     )
   }
@@ -55,6 +73,17 @@ export function SalesReport({ report, loading }: Props) {
 
   return (
     <div className="space-y-4">
+      {/* Header with refresh */}
+      <div className="flex items-center justify-between">
+        <p className="text-xs text-muted-foreground">{report.date}</p>
+        <button
+          onClick={onRefresh}
+          className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors"
+        >
+          <RefreshCw size={13} /> รีเฟรช
+        </button>
+      </div>
+
       {/* Summary cards */}
       <div className="grid grid-cols-3 gap-3">
         <SummaryCard
@@ -79,8 +108,8 @@ export function SalesReport({ report, loading }: Props) {
       {/* Order list */}
       <div className="space-y-2">
         <h3 className="text-sm font-medium text-muted-foreground">รายการออร์เดอร์</h3>
-        {report.orders.map(order => (
-          <div key={order.id} className="bg-card border border-border rounded-2xl p-3">
+        {report.orders.map((order, i) => (
+          <div key={`${order.id}-${i}`} className="bg-card border border-border rounded-2xl p-3">
             <div className="flex items-start justify-between gap-2">
               <div className="flex-1 min-w-0">
                 <p className="text-xs text-muted-foreground">{order.date}</p>

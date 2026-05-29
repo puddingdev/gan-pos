@@ -57,18 +57,23 @@ export default function AdminPage() {
     }
   }, [gasOk])
 
+  async function loadReport() {
+    if (!gasOk) return
+    setReportStatus('loading')
+    try {
+      const today = new Date().toISOString().slice(0, 10)
+      const data = await fetchReport(today)
+      setReport(data)
+      setReportStatus('success')
+    } catch {
+      setReportStatus('error')
+    }
+  }
+
   async function handleTabChange(tab: string) {
     setActiveTab(tab)
     if (tab === 'report' && !report && reportStatus !== 'loading') {
-      setReportStatus('loading')
-      try {
-        const today = new Date().toISOString().slice(0, 10)
-        const data = await fetchReport(today)
-        setReport(data)
-        setReportStatus('success')
-      } catch {
-        setReportStatus('error')
-      }
+      loadReport()
     }
   }
 
@@ -163,6 +168,8 @@ export default function AdminPage() {
             <SalesReport
               report={report}
               loading={reportStatus === 'loading'}
+              gasOk={gasOk}
+              onRefresh={loadReport}
             />
           </TabsContent>
         </Tabs>

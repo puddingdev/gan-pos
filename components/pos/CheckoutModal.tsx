@@ -33,15 +33,16 @@ export function CheckoutModal({ open, items, total, onClose, onConfirm, saving }
   }, [open])
 
   const amountPaid = parseFloat(amountStr) || 0
-  const change = method === 'cash' ? Math.max(0, amountPaid - total) : 0
-  const canConfirm = method === 'transfer' || amountPaid >= total
+  const isExact = method === 'cash' && amountStr === ''
+  const effectivePaid = isExact ? total : amountPaid
+  const change = isExact ? 0 : Math.max(0, amountPaid - total)
+  const canConfirm = method === 'transfer' || isExact || amountPaid >= total
 
-  const quickAmounts = [
-    total,
+  const roundAmounts = [
     Math.ceil(total / 20) * 20,
     Math.ceil(total / 50) * 50,
     Math.ceil(total / 100) * 100,
-  ].filter((v, i, arr) => arr.indexOf(v) === i).slice(0, 4)
+  ].filter((v, i, arr) => arr.indexOf(v) === i && v > total).slice(0, 3)
 
   return (
     <Dialog open={open} onOpenChange={v => { if (!v && !saving) onClose() }}>
@@ -90,30 +91,45 @@ export function CheckoutModal({ open, items, total, onClose, onConfirm, saving }
           {/* Cash input */}
           {method === 'cash' && (
             <div className="space-y-3">
-              <Input
-                type="number"
-                inputMode="numeric"
-                placeholder="รับเงินมา"
-                value={amountStr}
-                onChange={e => setAmountStr(e.target.value)}
-                className="h-14 text-xl font-semibold text-center rounded-2xl border-border"
-                autoFocus
-              />
               {/* Quick amount buttons */}
-              <div className="grid grid-cols-4 gap-2">
-                {quickAmounts.map(amt => (
+              <div className={`grid gap-2 ${roundAmounts.length > 0 ? 'grid-cols-4' : 'grid-cols-1'}`}>
+                <button
+                  onClick={() => setAmountStr('')}
+                  className={`py-3 text-sm font-semibold rounded-xl transition-colors ${
+                    isExact
+                      ? 'bg-primary text-primary-foreground'
+                      : 'bg-secondary text-foreground hover:bg-accent'
+                  }`}
+                >
+                  พอดี
+                </button>
+                {roundAmounts.map(amt => (
                   <button
                     key={amt}
                     onClick={() => setAmountStr(String(amt))}
-                    className="py-2 text-sm font-medium rounded-xl bg-secondary hover:bg-accent transition-colors"
+                    className={`py-3 text-sm font-medium rounded-xl transition-colors ${
+                      amountStr === String(amt)
+                        ? 'bg-primary text-primary-foreground'
+                        : 'bg-secondary text-foreground hover:bg-accent'
+                    }`}
                   >
                     {amt}
                   </button>
                 ))}
               </div>
 
+              {/* Custom amount input */}
+              <Input
+                type="number"
+                inputMode="numeric"
+                placeholder="หรือกรอกจำนวนเงิน"
+                value={amountStr}
+                onChange={e => setAmountStr(e.target.value)}
+                className="h-12 text-lg font-semibold text-center rounded-2xl border-border"
+              />
+
               {/* Change display */}
-              {amountPaid > 0 && (
+              {!isExact && amountPaid > 0 && (
                 <div className="flex justify-between items-center bg-secondary rounded-2xl px-4 py-3">
                   <span className="text-muted-foreground text-sm">เงินทอน</span>
                   <span className={`text-2xl font-bold ${
@@ -128,7 +144,7 @@ export function CheckoutModal({ open, items, total, onClose, onConfirm, saving }
 
           {/* Confirm button */}
           <Button
-            onClick={() => onConfirm(method, method === 'transfer' ? total : amountPaid)}
+            onClick={() => onConfirm(method, method === 'transfer' ? total : effectivePaid)}
             disabled={!canConfirm || saving}
             className="w-full h-14 text-base font-semibold rounded-2xl bg-primary hover:bg-primary/90"
           >

@@ -12,7 +12,7 @@ interface Props {
 
 function SkeletonCard() {
   return (
-    <div className="rounded-2xl bg-card border border-border animate-pulse h-[100px]" />
+    <div className="rounded-2xl bg-card border border-border animate-pulse h-25" />
   )
 }
 
@@ -26,7 +26,7 @@ function ProductCard({ product, onAdd }: { product: Product; onAdd: () => void }
       disabled={unavailable}
       className={`
         flex flex-col items-start justify-between p-4 rounded-2xl border text-left
-        min-h-[100px] w-full transition-all active:scale-95
+        min-h-25 w-full transition-all active:scale-95
         ${unavailable
           ? 'bg-muted border-border opacity-50 cursor-not-allowed'
           : 'bg-card border-border hover:border-primary hover:shadow-md cursor-pointer'
@@ -65,9 +65,10 @@ export function MenuGrid({ products, onAddToCart, loading }: Props) {
   if (loading) {
     return (
       <div className="flex-1 overflow-y-auto p-4">
-        <div className="grid grid-cols-3 lg:grid-cols-4 gap-3">
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
           {Array.from({ length: 12 }).map((_, i) => <SkeletonCard key={i} />)}
         </div>
+
       </div>
     )
   }
@@ -95,7 +96,7 @@ export function MenuGrid({ products, onAddToCart, loading }: Props) {
               ไม่มีสินค้าในหมวดนี้
             </div>
           ) : (
-            <div className="grid grid-cols-3 lg:grid-cols-4 gap-3">
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
               {filtered.map(product => (
                 <ProductCard
                   key={product.id}

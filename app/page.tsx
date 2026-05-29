@@ -4,9 +4,10 @@ import { useState, useEffect, useCallback } from 'react'
 import { MenuGrid } from '@/components/pos/MenuGrid'
 import { CartPanel } from '@/components/pos/CartPanel'
 import { CheckoutModal } from '@/components/pos/CheckoutModal'
+import { Sheet, SheetContent, SheetTitle } from '@/components/ui/sheet'
 import { fetchProducts, saveOrder, isGasConfigured } from '@/services/api'
 import type { Product, CartItem, OrderRow, ApiStatus, PaymentMethod } from '@/types'
-import { Settings, RefreshCw } from 'lucide-react'
+import { Settings, RefreshCw, ShoppingBag } from 'lucide-react'
 import Link from 'next/link'
 
 const MOCK_PRODUCTS: Product[] = [
@@ -28,10 +29,8 @@ function generateOrderId(): string {
 }
 
 function formatOrderDate(d: Date): string {
-  return d.toLocaleString('th-TH', {
-    year: 'numeric', month: '2-digit', day: '2-digit',
-    hour: '2-digit', minute: '2-digit', hour12: false,
-  }).replace(',', '')
+  const pad = (n: number) => String(n).padStart(2, '0')
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}`
 }
 
 export default function PosPage() {
@@ -40,6 +39,7 @@ export default function PosPage() {
   const [status, setStatus] = useState<ApiStatus>('idle')
   const [errorMsg, setErrorMsg] = useState('')
   const [checkoutOpen, setCheckoutOpen] = useState(false)
+  const [cartOpen, setCartOpen] = useState(false)
   const [saving, setSaving] = useState(false)
   const [successMsg, setSuccessMsg] = useState('')
 
@@ -134,10 +134,16 @@ export default function PosPage() {
   }
 
   const total = cart.reduce((s, i) => s + i.unitPrice * i.quantity, 0)
+  const itemCount = cart.reduce((s, i) => s + i.quantity, 0)
+
+  function handleCheckoutFromCart() {
+    setCartOpen(false)
+    setCheckoutOpen(true)
+  }
 
   return (
-    <div className="flex h-screen overflow-hidden bg-background">
-      {/* Left: Menu */}
+    <div className="flex flex-col md:flex-row h-[100dvh] overflow-hidden bg-background">
+      {/* Menu area */}
       <div className="flex flex-col flex-1 min-w-0 overflow-hidden">
         {/* Header */}
         <header className="shrink-0 flex items-center justify-between px-4 py-3 border-b border-border bg-card">
@@ -185,8 +191,8 @@ export default function PosPage() {
         />
       </div>
 
-      {/* Right: Cart */}
-      <div className="shrink-0 w-90 border-l border-border flex flex-col">
+      {/* iPad/Desktop sidebar cart */}
+      <div className="hidden md:flex shrink-0 w-80 border-l border-border flex-col">
         <CartPanel
           items={cart}
           onUpdateQty={handleUpdateQty}
@@ -194,6 +200,63 @@ export default function PosPage() {
           onCheckout={() => setCheckoutOpen(true)}
         />
       </div>
+
+      {/* Mobile bottom cart bar */}
+      <div
+        className="md:hidden shrink-0 border-t border-border bg-card"
+        style={{ paddingBottom: 'max(0.75rem, env(safe-area-inset-bottom))' }}
+      >
+        <div className="flex items-center gap-3 px-4 pt-3 pb-0">
+          <button
+            onClick={() => cart.length > 0 && setCartOpen(true)}
+            className="relative shrink-0 p-1"
+            aria-label="ดูรายการ"
+          >
+            <ShoppingBag size={26} className={cart.length > 0 ? 'text-primary' : 'text-muted-foreground'} />
+            {itemCount > 0 && (
+              <span className="absolute -top-1 -right-1 bg-primary text-primary-foreground text-[10px] font-bold w-5 h-5 rounded-full flex items-center justify-center">
+                {itemCount > 9 ? '9+' : itemCount}
+              </span>
+            )}
+          </button>
+
+          <div className="flex-1 min-w-0">
+            {itemCount > 0 ? (
+              <p className="text-xs text-muted-foreground">{itemCount} รายการ</p>
+            ) : (
+              <p className="text-xs text-muted-foreground">ยังไม่มีรายการ</p>
+            )}
+          </div>
+
+          <button
+            onClick={() => setCheckoutOpen(true)}
+            disabled={cart.length === 0}
+            className="shrink-0 px-5 py-3 rounded-2xl bg-primary text-primary-foreground font-semibold text-sm transition-opacity disabled:opacity-40 active:scale-95"
+          >
+            ฿{total.toLocaleString()} · ชำระเงิน
+          </button>
+        </div>
+      </div>
+
+      {/* Mobile cart sheet */}
+      <Sheet open={cartOpen} onOpenChange={setCartOpen}>
+        <SheetContent
+          side="bottom"
+          showCloseButton={false}
+          className="h-[82vh] p-0 rounded-t-3xl overflow-hidden gap-0"
+        >
+          <div className="flex justify-center pt-3 pb-1 shrink-0">
+            <div className="w-10 h-1 rounded-full bg-border" />
+          </div>
+          <SheetTitle className="sr-only">รายการคิดเงิน</SheetTitle>
+          <CartPanel
+            items={cart}
+            onUpdateQty={handleUpdateQty}
+            onRemove={handleRemove}
+            onCheckout={handleCheckoutFromCart}
+          />
+        </SheetContent>
+      </Sheet>
 
       <CheckoutModal
         open={checkoutOpen}
