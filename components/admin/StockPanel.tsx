@@ -1,6 +1,5 @@
 'use client'
 
-import { Loader2 } from 'lucide-react'
 import type { Product } from '@/types'
 
 interface Props {
@@ -10,6 +9,12 @@ interface Props {
 }
 
 export function StockPanel({ products, onAdjust, saving }: Props) {
+  function handleCommit(p: Product, value: string) {
+    const num = parseInt(value, 10)
+    if (isNaN(num) || num < 0 || num === p.stock) return
+    onAdjust(p.id, num - p.stock)
+  }
+
   return (
     <div className="space-y-2">
       {products.map(p => {
@@ -29,11 +34,23 @@ export function StockPanel({ products, onAdjust, saving }: Props) {
             </div>
 
             <div className="flex items-center gap-2 shrink-0">
-              <span className={`text-xl font-bold w-14 text-center ${
-                lowStock ? 'text-amber-700' : 'text-foreground'
-              }`}>
-                {unlimited ? '∞' : p.stock}
-              </span>
+              {unlimited ? (
+                <span className="text-xl font-bold w-14 text-center text-foreground">∞</span>
+              ) : (
+                <input
+                  key={p.stock}
+                  type="number"
+                  inputMode="numeric"
+                  defaultValue={p.stock}
+                  min={0}
+                  disabled={saving}
+                  onBlur={e => handleCommit(p, e.target.value)}
+                  onKeyDown={e => { if (e.key === 'Enter') e.currentTarget.blur() }}
+                  className={`w-16 text-xl font-bold text-center rounded-xl border border-border bg-transparent focus:outline-none focus:ring-2 focus:ring-primary px-1 py-0.5 disabled:opacity-40 ${
+                    lowStock ? 'text-amber-700' : 'text-foreground'
+                  }`}
+                />
+              )}
               <span className="text-xs text-muted-foreground">{p.unit}</span>
 
               {!unlimited && (
@@ -54,8 +71,6 @@ export function StockPanel({ products, onAdjust, saving }: Props) {
                   ))}
                 </div>
               )}
-
-              {saving && <Loader2 size={14} className="animate-spin text-muted-foreground" />}
             </div>
           </div>
         )

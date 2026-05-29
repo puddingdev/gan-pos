@@ -15,6 +15,7 @@ import type { Product } from '@/types'
 interface Props {
   products: Product[]
   onSave: (product: Product) => Promise<void>
+  onToggle: (product: Product) => void
   saving: boolean
 }
 
@@ -25,7 +26,7 @@ const EMPTY: Omit<Product, 'id'> = {
   stock: 10, unit: 'แก้ว', available: true,
 }
 
-export function MenuManagement({ products, onSave, saving }: Props) {
+export function MenuManagement({ products, onSave, onToggle, saving }: Props) {
   const [open, setOpen] = useState(false)
   const [editProduct, setEditProduct] = useState<Product | null>(null)
   const [form, setForm] = useState<Omit<Product, 'id'>>(EMPTY)
@@ -48,8 +49,8 @@ export function MenuManagement({ products, onSave, saving }: Props) {
     setOpen(false)
   }
 
-  async function toggleAvailable(p: Product) {
-    await onSave({ ...p, available: !p.available })
+  function toggleAvailable(p: Product) {
+    onToggle(p)
   }
 
   return (
@@ -79,7 +80,6 @@ export function MenuManagement({ products, onSave, saving }: Props) {
               {/* Available toggle */}
               <button
                 onClick={() => toggleAvailable(p)}
-                disabled={saving}
                 className={`w-11 h-6 rounded-full transition-colors relative ${
                   p.available ? 'bg-primary' : 'bg-muted-foreground/30'
                 }`}

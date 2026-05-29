@@ -99,6 +99,16 @@ export default function AdminPage() {
     }
   }
 
+  function handleToggleAvailable(product: Product) {
+    const toggled = { ...product, available: !product.available }
+    setProducts(prev => prev.map(p => p.id === product.id ? toggled : p))
+    if (gasOk) {
+      updateProduct(toggled)
+        .then(() => invalidateProductsCache())
+        .catch(() => setProducts(prev => prev.map(p => p.id === product.id ? product : p)))
+    }
+  }
+
   async function handleAdjustStock(id: string, delta: number) {
     setSaving(true)
     try {
@@ -159,6 +169,7 @@ export default function AdminPage() {
             <MenuManagement
               products={products}
               onSave={handleSaveProduct}
+              onToggle={handleToggleAvailable}
               saving={saving}
             />
           </TabsContent>
