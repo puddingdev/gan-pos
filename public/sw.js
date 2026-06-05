@@ -36,7 +36,10 @@ self.addEventListener('fetch', e => {
   if (url.pathname.startsWith('/_next/static')) {
     e.respondWith(
       caches.match(request).then(cached => cached || fetch(request).then(res => {
-        if (res.ok) caches.open(CACHE).then(c => c.put(request, res.clone()))
+        if (res.ok) {
+          const clone = res.clone()
+          caches.open(CACHE).then(c => c.put(request, clone))
+        }
         return res
       }))
     )

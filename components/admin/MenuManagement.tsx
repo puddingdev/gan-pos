@@ -6,6 +6,7 @@ import { Input } from '@/components/ui/input'
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
@@ -103,6 +104,7 @@ export function MenuManagement({ products, onSave, onToggle, saving }: Props) {
         <DialogContent className="max-w-sm rounded-3xl p-0 overflow-hidden">
           <DialogHeader className="px-6 pt-6 pb-0">
             <DialogTitle>{editProduct ? 'แก้ไขเมนู' : 'เพิ่มเมนูใหม่'}</DialogTitle>
+            <DialogDescription className="sr-only">กรอกข้อมูลสินค้า</DialogDescription>
           </DialogHeader>
 
           <div className="px-6 py-4 space-y-3">
