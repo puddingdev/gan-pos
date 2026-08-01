@@ -23,7 +23,8 @@ const MOCK_PRODUCTS: Product[] = [
 
 function generateOrderId(): string {
   const now = new Date()
-  const date = now.toISOString().slice(0, 10).replace(/-/g, '')
+  const pad = (n: number) => String(n).padStart(2, '0')
+  const date = `${now.getFullYear()}${pad(now.getMonth() + 1)}${pad(now.getDate())}`
   const time = now.getTime().toString().slice(-4)
   return `ORD-${date}-${time}`
 }

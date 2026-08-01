@@ -62,8 +62,7 @@ export default function AdminPage() {
     if (!gasOk) return
     setReportStatus('loading')
     try {
-      const today = new Date().toISOString().slice(0, 10)
-      const data = await fetchReport(today)
+      const data = await fetchReport()
       setReport(data)
       setReportStatus('success')
     } catch {
